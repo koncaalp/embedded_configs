@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'package:path/path.dart';
 
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
@@ -7,11 +9,14 @@ import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:code_builder/code_builder.dart';
 import 'package:embedded_config_annotations/embedded_config_annotations.dart';
+import 'package:glob/glob.dart';
 import 'package:source_gen/source_gen.dart' as source_gen;
+import 'package:dart_style/dart_style.dart';
 
 import 'build_exception.dart';
 import 'environment_provider.dart';
 import 'key_config.dart';
+import 'package:file/local.dart';
 
 const _classAnnotationTypeChecker =
     source_gen.TypeChecker.fromRuntime(EmbeddedConfig);
@@ -32,23 +37,75 @@ class _AnnotatedClass {
 }
 
 class ConfigGenerator extends source_gen.Generator {
-  final Map<String, KeyConfig> _keys;
+  final List<Map<String, KeyConfig>> _keysList;
   final EnvironmentProvider _environmentProvider;
+  final _formatter = DartFormatter();
 
   ConfigGenerator(Map<String, dynamic> config,
       {EnvironmentProvider environmentProvider =
           const PlatformEnvironmentProvider()})
       // Parse key configs
-      : _keys = config.map((k, v) => MapEntry(k, KeyConfig.fromBuildConfig(v))),
+      : _keysList = _generateKeysList(config),
         _environmentProvider = environmentProvider;
 
+  static List<Map<String, KeyConfig>> _generateKeysList(Map<String, dynamic> config) {
+    final glob = Glob(config['configs']);
+    final matchedList = glob.listFileSystemSync(const LocalFileSystem());
+    final keysList = matchedList
+        .map((e) => {
+          // TODO better naming for out dir
+            basenameWithoutExtension(e.path): KeyConfig.fromBuildConfig(e.path,
+                  outDir: e.parent.path.replaceAll('assets', config['out_dir']))
+            })
+        .toList();
+    return keysList;
+  }
+
+  /// With this quick & dirty update, multiple config files are supported now. kind of flavor support.
+  /// configs should be placed at the build.yaml respecting to glob pattern.
+  /// ie.
+  ///      options:
+  ///        app_configs: 'assets/**app_config.json'
+  ///
+  /// Instead of implementing our own generator, it might be preferable to override current [ConfigGenerator].
+  /// With this update, it's no longer compatible with the further updates of upstream repo.
+  /// And won't take many of the advantages of build_runner anymore.
+  /// If current changes met our needs, we can think about to refactor (or to create a new generator with the same capabilities) it.
+  /// This repo is no longer a valid
   @override
   FutureOr<String?> generate(
       source_gen.LibraryReader library, BuildStep buildStep) async {
+    await Future.forEach(_keysList, (Map<String, dynamic> keys) async {
+      final configName = basenameWithoutExtension(buildStep.inputId.path);
+      final keyConfig = keys[configName] as KeyConfig?;
+
+      if(keyConfig != null) {
+        try {
+          final content = await _generate(library, buildStep, keys);
+          if(content != null) {
+            final String outDir = keyConfig.outDir;
+            final fileName = '$outDir/$configName.embedded.dart';
+            if(!File(fileName).existsSync()) {
+              File(fileName).createSync(recursive: true);
+            }
+            File(fileName).writeAsStringSync(_formatContent(content, configName));
+          }
+        } on Exception catch(e) {
+          print("Can't generate $configName for ${keyConfig.outDir} -  $e");
+        }
+      } else {
+        // just continue;
+      }
+    });
+
+    return null;
+  }
+
+  FutureOr<String?> _generate(source_gen.LibraryReader library, BuildStep buildStep, Map<String, dynamic> keys)  async {
     // Get annotated classes
     final sourceClasses = <_AnnotatedClass>[];
     final annotatedElements =
-        library.annotatedWith(_classAnnotationTypeChecker);
+    library.annotatedWith(_classAnnotationTypeChecker);
 
     for (final annotatedElement in annotatedElements) {
       final classElement = annotatedElement.element;
@@ -66,7 +123,7 @@ class ConfigGenerator extends source_gen.Generator {
 
       for (final accessor in classElement.accessors) {
         final annotation =
-            _getterNameAnnotationTypeChecker.firstAnnotationOf(accessor);
+        _getterNameAnnotationTypeChecker.firstAnnotationOf(accessor);
 
         if (annotation != null) {
           final reader = source_gen.ConstantReader(annotation);
@@ -88,7 +145,7 @@ class ConfigGenerator extends source_gen.Generator {
     for (final annotatedClass in sourceClasses) {
       // Resolve real config values
       final config = await _resolveConfig(
-          buildStep, annotatedClass.element, annotatedClass.annotation);
+          buildStep, annotatedClass.element, annotatedClass.annotation, keys);
 
       // Generate class
       final $class = _generateClass(
@@ -137,9 +194,9 @@ class ConfigGenerator extends source_gen.Generator {
 
   /// Resolves the config values for the given embedded config [annotation].
   Future<Map<String, dynamic>> _resolveConfig(BuildStep buildStep,
-      ClassElement classElement, EmbeddedConfig annotation) async {
+      ClassElement classElement, EmbeddedConfig annotation, Map<String, dynamic> keys) async {
     // Get the key config
-    final KeyConfig? keyConfig = _keys[annotation.key];
+    final KeyConfig? keyConfig = keys[annotation.key];
 
     if (keyConfig == null) {
       throw BuildException(
@@ -540,5 +597,21 @@ class ConfigGenerator extends source_gen.Generator {
 
   String _generatedClassNameOf(String className) {
     return '_\$${className}Embedded';
+  }
+
+  String _formatContent(String content, String partOf) {
+    final formattedContent = '''
+      // GENERATED CODE - DO NOT MODIFY BY HAND
+      
+      part of $partOf;
+      
+      // **************************************************************************
+      // ConfigGenerator
+      // **************************************************************************
+      
+      $content
+      ''';
+
+    return _formatter.format(formattedContent);
   }
 }

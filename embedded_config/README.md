@@ -102,16 +102,31 @@ targets:
     builders:
       embedded_config:
         options:
-          # Maps the configuration source key 'app_config' to the
-          # JSON file at 'lib/app_config.json'
+          # Maps the configuration source keys ie. 'app_config.dart' to the
+          # corresponding JSON files at 'lib/app_config.json'
           #
           # The key 'app_config' is the same key given to the
           # @EmbeddedConfig annotation on the embedded config class
-          app_config: 'lib/app_config.json'
-
-          # This can also be written like so, both mean the same thing
-          # app_config:
-          #  source: 'lib/app_config.json'
+          # given glob pattern will find all the matched .json files at given dir.
+          #  .assets
+          #  ├── app_config.json
+          #  ├── fancy_customer
+          #  │   ├── user_config.json
+          #  │   └── app_config.json
+          #  ├── cool_customer
+          #  │   ├── test
+          #  │   │   └── time_config.json
+          #  │   └── prod
+          #  │   │   └── app_config.json
+          #  ├── angry_customer
+          #  │   ├── test
+          #  │   │   └── log_config.json
+          configs: 'assets/**.json'
+  
+          #Out directory for the generated configs. Respects to input configs' path.
+          # e.g. if input config path looks like: **'assets/fancy_customer/test/app_config.json'**
+          # out path will be like **'lib/model/gen/fancy_customer/test/app_config.dart'**
+          out_dir: 'lib/model/gen'
 ```
 
 To complete the example, given the `AppConfig` class defined earlier, the `app_config.json` file could contain:

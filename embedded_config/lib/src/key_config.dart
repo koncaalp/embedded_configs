@@ -2,11 +2,12 @@ import 'build_exception.dart';
 
 class KeyConfig {
   final List<String>? sources;
+  final String outDir;
   final Map? inline;
 
-  KeyConfig._(this.sources, this.inline);
+  KeyConfig._(this.sources, this.outDir, this.inline);
 
-  factory KeyConfig.fromBuildConfig(dynamic config) {
+  factory KeyConfig.fromBuildConfig(dynamic config, {String outDir = ''}) {
     List<String>? sources;
     Map? inline;
 
@@ -53,6 +54,6 @@ class KeyConfig {
           'inline source.');
     }
 
-    return KeyConfig._(sources, inline);
+    return KeyConfig._(sources, outDir, inline);
   }
 }
