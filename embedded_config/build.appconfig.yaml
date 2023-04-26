@@ -27,4 +27,4 @@ targets:
           #Out directory for the generated configs. Respects to input configs' path.
           # e.g. if input config path looks like: **'assets/fancy_customer/test/app_config.json'**
           # out path will be like **'lib/model/gen/fancy_customer/test/app_config.dart'**
-          out_dir: 'lib/model/gen'
+          out_dir: 'lib/'
