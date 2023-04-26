@@ -48,13 +48,15 @@ class ConfigGenerator extends source_gen.Generator {
       : _keysList = _generateKeysList(config),
         _environmentProvider = environmentProvider;
 
-  static List<Map<String, KeyConfig>> _generateKeysList(Map<String, dynamic> config) {
+  static List<Map<String, KeyConfig>> _generateKeysList(
+      Map<String, dynamic> config) {
     final glob = Glob(config['configs']);
     final matchedList = glob.listFileSystemSync(const LocalFileSystem());
     final keysList = matchedList
         .map((e) => {
-          // TODO better naming for out dir
-            basenameWithoutExtension(e.path): KeyConfig.fromBuildConfig(e.path,
+              // TODO better naming for out dir
+              basenameWithoutExtension(e.path): KeyConfig.fromBuildConfig(
+                  e.path,
                   outDir: e.parent.path.replaceAll('assets', config['out_dir']))
             })
         .toList();
@@ -79,18 +81,19 @@ class ConfigGenerator extends source_gen.Generator {
       final configName = basenameWithoutExtension(buildStep.inputId.path);
       final keyConfig = keys[configName] as KeyConfig?;
 
-      if(keyConfig != null) {
+      if (keyConfig != null) {
         try {
           final content = await _generate(library, buildStep, keys);
-          if(content != null) {
+          if (content != null) {
             final String outDir = keyConfig.outDir;
             final fileName = '$outDir/$configName.embedded.dart';
-            if(!File(fileName).existsSync()) {
+            if (!File(fileName).existsSync()) {
               File(fileName).createSync(recursive: true);
             }
-            File(fileName).writeAsStringSync(_formatContent(content, configName));
+            File(fileName)
+                .writeAsStringSync(_formatContent(content, configName));
           }
-        } on Exception catch(e) {
+        } on Exception catch (e) {
           print("Can't generate $configName for ${keyConfig.outDir} -  $e");
         }
       } else {
@@ -101,11 +104,12 @@ class ConfigGenerator extends source_gen.Generator {
     return null;
   }
 
-  FutureOr<String?> _generate(source_gen.LibraryReader library, BuildStep buildStep, Map<String, dynamic> keys)  async {
+  FutureOr<String?> _generate(source_gen.LibraryReader library,
+      BuildStep buildStep, Map<String, dynamic> keys) async {
     // Get annotated classes
     final sourceClasses = <_AnnotatedClass>[];
     final annotatedElements =
-    library.annotatedWith(_classAnnotationTypeChecker);
+        library.annotatedWith(_classAnnotationTypeChecker);
 
     for (final annotatedElement in annotatedElements) {
       final classElement = annotatedElement.element;
@@ -123,7 +127,7 @@ class ConfigGenerator extends source_gen.Generator {
 
       for (final accessor in classElement.accessors) {
         final annotation =
-        _getterNameAnnotationTypeChecker.firstAnnotationOf(accessor);
+            _getterNameAnnotationTypeChecker.firstAnnotationOf(accessor);
 
         if (annotation != null) {
           final reader = source_gen.ConstantReader(annotation);
@@ -193,8 +197,11 @@ class ConfigGenerator extends source_gen.Generator {
   }
 
   /// Resolves the config values for the given embedded config [annotation].
-  Future<Map<String, dynamic>> _resolveConfig(BuildStep buildStep,
-      ClassElement classElement, EmbeddedConfig annotation, Map<String, dynamic> keys) async {
+  Future<Map<String, dynamic>> _resolveConfig(
+      BuildStep buildStep,
+      ClassElement classElement,
+      EmbeddedConfig annotation,
+      Map<String, dynamic> keys) async {
     // Get the key config
     final KeyConfig? keyConfig = keys[annotation.key];
 
