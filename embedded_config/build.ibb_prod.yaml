@@ -22,7 +22,8 @@ targets:
           #  ├── angry_customer
           #  │   ├── test
           #  │   │   └── log_config.json
-          configs: 'assets/app_config.json'
+          configs: 'assets/ibb/prod/**.json'
+
   
           #Out directory for the generated configs. Respects to input configs' path.
           # e.g. if input config path looks like: **'assets/fancy_customer/test/app_config.json'**

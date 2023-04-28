@@ -86,12 +86,14 @@ class ConfigGenerator extends source_gen.Generator {
           final content = await _generate(library, buildStep, keys);
           if (content != null) {
             final String outDir = keyConfig.outDir;
+            final String partOfName = "'$configName.dart'";
             final fileName = '$outDir/$configName.embedded.dart';
             if (!File(fileName).existsSync()) {
               File(fileName).createSync(recursive: true);
             }
+
             File(fileName)
-                .writeAsStringSync(_formatContent(content, configName));
+                .writeAsStringSync(_formatContent(content, partOfName));
           }
         } on Exception catch (e) {
           print("Can't generate $configName for ${keyConfig.outDir} -  $e");
