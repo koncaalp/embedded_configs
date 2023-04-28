@@ -1,0 +1,8 @@
+targets:
+  $default:
+    builders:
+      embedded_config:
+        options:
+          configs:
+            app_config: 'app_config.json'
+          out_dir: 'lib'
