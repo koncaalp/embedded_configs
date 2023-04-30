@@ -1,20 +1,14 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'app_config.dart';
+part of 'iam_config.dart';
 
 // **************************************************************************
 // ConfigGenerator
 // **************************************************************************
 
-class _$AppConfigEmbedded extends AppConfig {
-  const _$AppConfigEmbedded();
+class _$IAmConfigEmbedded extends IAmConfig {
+  const _$IAmConfigEmbedded();
 
   @override
-  final apiUrl = 'deneme';
-
-  @override
-  final baseConf = 'baseConf';
-
-  @override
-  final newConfig = 'new';
+  final build = 123;
 }

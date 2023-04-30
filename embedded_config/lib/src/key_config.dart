@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'build_exception.dart';
 
 class KeyConfig {
@@ -7,15 +9,32 @@ class KeyConfig {
 
   KeyConfig._(this.sources, this.outDir, this.inline);
 
-  factory KeyConfig.fromBuildConfig(dynamic config, {String outDir = ''}) {
+  factory KeyConfig.fromBuildConfig(dynamic config, dynamic env,
+      {String outDir = ''}) {
     List<String>? sources;
     Map? inline;
+    Uri uri = Uri.parse(config);
+    String basePath = uri
+        .replace(
+            pathSegments: uri.pathSegments.map((segment) {
+          return (segment == env) ? "base" : segment;
+        }).toList())
+        .toString();
+    basePath = "./$basePath";
 
     if (config is String) {
       // Specified just a single file source
-      sources = [config];
+
+      // File('fileName').writeAsStringSync(env);
+
+      if (File(basePath).existsSync()) {
+        sources = [basePath, config];
+      } else {
+        sources = [config];
+      }
     } else if (config is Map) {
       // Read the source config
+      File('fileName').writeAsStringSync("esle girdm");
       final source = config['source'];
 
       if (source != null) {
@@ -53,7 +72,8 @@ class KeyConfig {
           'Embedded config key must specify at least one file source or an '
           'inline source.');
     }
-
+    File('fileName').writeAsStringSync("sources: ${sources.toString()}\n",
+        mode: FileMode.append);
     return KeyConfig._(sources, outDir, inline);
   }
 }

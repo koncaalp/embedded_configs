@@ -50,16 +50,24 @@ class ConfigGenerator extends source_gen.Generator {
 
   static List<Map<String, KeyConfig>> _generateKeysList(
       Map<String, dynamic> config) {
-    final glob = Glob(config['configs']);
+    Map value = config['configs'];
+    // File('fileName').writeAsStringSync(value.runtimeType.toString());
+    // File('fileName').writeAsStringSync(value['source'].toString());
+    String source = value['source'].toString();
+    String env = value['env'].toString();
+    final glob = Glob(source);
     final matchedList = glob.listFileSystemSync(const LocalFileSystem());
     final keysList = matchedList
         .map((e) => {
               // TODO better naming for out dir
               basenameWithoutExtension(e.path): KeyConfig.fromBuildConfig(
+                  //appconfig :
                   e.path,
+                  env,
                   outDir: e.parent.path.replaceAll('assets', config['out_dir']))
             })
         .toList();
+
     return keysList;
   }
 
@@ -80,10 +88,14 @@ class ConfigGenerator extends source_gen.Generator {
     await Future.forEach(_keysList, (Map<String, dynamic> keys) async {
       final configName = basenameWithoutExtension(buildStep.inputId.path);
       final keyConfig = keys[configName] as KeyConfig?;
+      File('fileName').writeAsStringSync("mrb: ${keys[configName].toString()}",
+          mode: FileMode.append);
 
       if (keyConfig != null) {
         try {
           final content = await _generate(library, buildStep, keys);
+          File('fileName')
+              .writeAsStringSync(content.toString(), mode: FileMode.append);
           if (content != null) {
             final String outDir = keyConfig.outDir;
             final String partOfName = "'$configName.dart'";
@@ -217,6 +229,8 @@ class ConfigGenerator extends source_gen.Generator {
 
     // Apply file sources
     if (keyConfig.sources != null) {
+      File('fileName').writeAsStringSync(keyConfig.sources.toString(),
+          mode: FileMode.append);
       for (final filePath in keyConfig.sources!) {
         // Read file
         final assetId = AssetId(buildStep.inputId.package, filePath);

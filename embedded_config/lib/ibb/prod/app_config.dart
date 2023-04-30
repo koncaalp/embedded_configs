@@ -6,6 +6,8 @@ part './app_config.embedded.dart';
 @EmbeddedConfig('app_config')
 abstract class AppConfig {
   String get apiUrl;
+  String get baseConf;
+  String get newConfig;
 
   const AppConfig();
 }

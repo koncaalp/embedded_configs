@@ -1,3 +1,4 @@
 {
-    "apiUrl": "base"
+    "apiUrl": "base",
+    "baseConf": "baseConf"
 }

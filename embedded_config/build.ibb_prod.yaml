@@ -22,7 +22,15 @@ targets:
           #  ├── angry_customer
           #  │   ├── test
           #  │   │   └── log_config.json
-          configs: 'assets/ibb/prod/**.json'
+          configs: 
+            source: 'assets/ibb/prod/**.json'
+            env: 'prod'
+          # configs: 'assets/ibb/prod/**.json'
+          
+          # configs: 
+          #   source:
+          #     - 'assets/ibb/base/**.json'
+          #     - 'assets/ibb/prod/**.json'
 
   
           #Out directory for the generated configs. Respects to input configs' path.
