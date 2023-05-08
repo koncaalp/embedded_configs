@@ -13,28 +13,40 @@ class KeyConfig {
       {String outDir = ''}) {
     List<String>? sources;
     Map? inline;
-    Uri uri = Uri.parse(config);
-    String basePath = uri
+    final Uri uri = Uri.parse(config);
+    String pathExtension = '';
+    bool foundEnv = false;
+    String envBasePath = uri
         .replace(
             pathSegments: uri.pathSegments.map((segment) {
-          return (segment == env) ? "base" : segment;
+          if (segment == env) {
+            foundEnv = true;
+            return 'base';
+          } else if (foundEnv) {
+            pathExtension += segment;
+            return segment;
+          } else {
+            return segment;
+          }
         }).toList())
         .toString();
-    basePath = "./$basePath";
+    envBasePath = './$envBasePath';
+
+    String appBasePath = './assets/base/$pathExtension';
 
     if (config is String) {
       // Specified just a single file source
 
-      // File('fileName').writeAsStringSync(env);
-
-      if (File(basePath).existsSync()) {
-        sources = [basePath, config];
+      if (File(envBasePath).existsSync()) {
+        sources = (File(appBasePath).existsSync())
+            ? [appBasePath, envBasePath, config]
+            : [envBasePath, config];
       } else {
-        sources = [config];
+        sources =
+            (File(appBasePath).existsSync()) ? [appBasePath, config] : [config];
       }
     } else if (config is Map) {
       // Read the source config
-      File('fileName').writeAsStringSync("esle girdm");
       final source = config['source'];
 
       if (source != null) {
@@ -72,8 +84,7 @@ class KeyConfig {
           'Embedded config key must specify at least one file source or an '
           'inline source.');
     }
-    File('fileName').writeAsStringSync("sources: ${sources.toString()}\n",
-        mode: FileMode.append);
+
     return KeyConfig._(sources, outDir, inline);
   }
 }

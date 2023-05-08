@@ -1,4 +1,5 @@
 {
     "apiUrl": "deneme",
-    "newConfig": "new"
+    "newConfig": "new",
+    "listConfig": ["list1", "list2"]
 }

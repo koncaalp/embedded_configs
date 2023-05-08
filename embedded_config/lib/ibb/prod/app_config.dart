@@ -7,7 +7,9 @@ part './app_config.embedded.dart';
 abstract class AppConfig {
   String get apiUrl;
   String get baseConf;
+  String get rBaseConf;
   String get newConfig;
+  List get listConfig;
 
   const AppConfig();
 }

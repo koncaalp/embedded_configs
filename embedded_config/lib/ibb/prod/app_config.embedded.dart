@@ -16,5 +16,11 @@ class _$AppConfigEmbedded extends AppConfig {
   final baseConf = 'baseConf';
 
   @override
+  final rBaseConf = 'rBaseConf';
+
+  @override
   final newConfig = 'new';
+
+  @override
+  final listConfig = const ['list1', 'list2'];
 }
