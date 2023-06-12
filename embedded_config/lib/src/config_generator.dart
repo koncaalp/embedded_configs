@@ -64,7 +64,7 @@ List<String> searchDirectory(Directory directory, String targetFileName) {
 
 List<String> getEnvs() {
   List<String> envs = [];
-  String directoryPath = './assets';
+  String directoryPath = './merged';
   String targetFilename = 'flavor.json';
   Uri uri;
   String flavor;
@@ -111,7 +111,7 @@ class ConfigGenerator extends source_gen.Generator {
         }
       }
 
-      outPath = outPath.replaceAll('assets', config['out_dir']);
+      outPath = outPath.replaceAll('merged', config['out_dir']);
       File('debug.txt').writeAsStringSync('generateKeysList: $outPath',
           mode: FileMode.append);
 
