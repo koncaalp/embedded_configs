@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'build_exception.dart';
 
 class KeyConfig {
@@ -9,42 +7,13 @@ class KeyConfig {
 
   KeyConfig._(this.sources, this.outDir, this.inline);
 
-  factory KeyConfig.fromBuildConfig(dynamic config, dynamic env,
-      {String outDir = ''}) {
+  factory KeyConfig.fromBuildConfig(dynamic config, {String outDir = ''}) {
     List<String>? sources;
     Map? inline;
-    final Uri uri = Uri.parse(config);
-    String pathExtension = '';
-    bool foundEnv = false;
-    String envBasePath = uri
-        .replace(
-            pathSegments: uri.pathSegments.map((segment) {
-          if (segment == env) {
-            foundEnv = true;
-            return 'base';
-          } else if (foundEnv) {
-            pathExtension += segment;
-            return segment;
-          } else {
-            return segment;
-          }
-        }).toList())
-        .toString();
-    envBasePath = './$envBasePath';
-
-    String appBasePath = './assets/base/$pathExtension';
 
     if (config is String) {
       // Specified just a single file source
-
-      if (File(envBasePath).existsSync()) {
-        sources = (File(appBasePath).existsSync())
-            ? [appBasePath, envBasePath, config]
-            : [envBasePath, config];
-      } else {
-        sources =
-            (File(appBasePath).existsSync()) ? [appBasePath, config] : [config];
-      }
+      sources = [config];
     } else if (config is Map) {
       // Read the source config
       final source = config['source'];
