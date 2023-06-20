@@ -38,20 +38,20 @@ class _AnnotatedClass {
 }
 
 List<String> searchDirectory(Directory directory, String targetFileName) {
-  List<String> paths = [];
-  var contents = directory.listSync(recursive: false, followLinks: false);
+  final List<String> paths = [];
+  final contents = directory.listSync(recursive: false, followLinks: false);
   bool foundTarget = false;
   String directoryPath;
 
   for (FileSystemEntity entity in contents) {
     if (entity is File && entity.path.endsWith(targetFileName)) {
       directoryPath = path.dirname(entity.path);
-      print("Found target file: $directoryPath");
+      print('Found target file: $directoryPath');
       paths.add(directoryPath);
       foundTarget = true;
     } else if (entity is Directory) {
       if (!foundTarget) {
-        List<String> pathsFromRecursion =
+        final List<String> pathsFromRecursion =
             searchDirectory(entity, targetFileName);
         paths.addAll(pathsFromRecursion);
       } else {
@@ -63,21 +63,20 @@ List<String> searchDirectory(Directory directory, String targetFileName) {
 }
 
 List<String> getEnvs() {
-  List<String> envs = [];
-  String directoryPath = './merged';
-  String targetFilename = 'flavor.json';
+  final List<String> envs = [];
+  final directoryPath = './assets/merged';
+  final targetFilename = 'flavor.json';
   Uri uri;
-  String flavor;
+
   String env;
   List<String> pathSegments;
 
   final directory = Directory(directoryPath);
-  List<String> paths = searchDirectory(directory, targetFilename);
+  final List<String> paths = searchDirectory(directory, targetFilename);
   print(paths.toString());
   for (String p in paths) {
     uri = Uri.parse(p);
     pathSegments = uri.pathSegments;
-    flavor = pathSegments[1];
     env = pathSegments[2];
     envs.add(env);
   }
@@ -111,7 +110,7 @@ class ConfigGenerator extends source_gen.Generator {
         }
       }
 
-      outPath = outPath.replaceAll('merged', config['out_dir']);
+      outPath = outPath.replaceAll('assets', config['out_dir']);
       File('debug.txt').writeAsStringSync('generateKeysList: $outPath',
           mode: FileMode.append);
 
@@ -180,7 +179,7 @@ class ConfigGenerator extends source_gen.Generator {
 
       if (classElement is! ClassElement ||
           !classElement.isAbstract ||
-          classElement.isEnum) {
+          classElement is EnumElement) {
         throw BuildException(
             'Only abstract classes may be annotated with @EmbeddedConfig!',
             classElement);
@@ -415,7 +414,7 @@ class ConfigGenerator extends source_gen.Generator {
 
     // Ensure non-null value provided for non-null field
     if (returnType.nullabilitySuffix == NullabilitySuffix.none &&
-        !returnType.isDynamic &&
+        returnType is! DynamicType &&
         config[key] == null) {
       throw BuildException(
           'Must provide a non-null config value for a non-nullable config property.');
@@ -467,7 +466,7 @@ class ConfigGenerator extends source_gen.Generator {
         ..assignment = _codeLiteral(value));
     } else if (_numTypeChecker.isAssignableFromType(returnType) ||
         _boolTypeChecker.isAssignableFromType(returnType) ||
-        returnType.isDynamic) {
+        returnType is DynamicType) {
       // Num, bool, dynamic, num? (note: num? will be dynamic)
       final value = _getLiteral(config, key);
 
